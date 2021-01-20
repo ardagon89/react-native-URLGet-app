@@ -1,6 +1,7 @@
 version: "3"
 services:
   app:
+    build: .
     container_name: react-native-app
     image: ardagon/react-native-urlget-app:latest
     restart: always
@@ -12,3 +13,6 @@ services:
       - 19004:19004
       - 19005:19005
       - 19006:19006
+    volumes:
+      - ./URLGet/App.js:/URLGet/App.js
+    command: ["yarn", "web"]

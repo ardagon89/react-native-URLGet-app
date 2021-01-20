@@ -6,4 +6,4 @@ RUN expo init URLGet --template blank
 WORKDIR /URLGet/
 COPY ./URLGet/ .
 
-CMD [ "yarn","web" ]
+CMD [ "yarn","start" ]

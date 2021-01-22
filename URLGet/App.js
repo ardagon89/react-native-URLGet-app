@@ -25,20 +25,57 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  console.log("App executed!");
+
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
+  const [leftText, setleftText] = useState("Blank!");
+  const [tranParams, onChangeText] = React.useState(
+    "tranId=2&tranType=PURCHASE&tranAmount=100"
+  );
+  const [alertFreq, setAlertFreq] = useState("10");
+
+  function leftButtonAction() {
+    console.log(tranParams);
+    fetch(
+      "https://5ketfr2si7.execute-api.us-east-2.amazonaws.com/dev/transactions?" +
+        tranParams
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setleftText(
+          data["tranId"] +
+            "-" +
+            data["tranType"] +
+            " for $" +
+            data["tranAmount"]
+        );
+      })
+      .catch((error) => console.log(error));
+  }
+
+  async function schedulePushNotification() {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "You've got mail! 📬",
+        body: "Here is the notification body",
+        data: { data: "goes here" },
+      },
+      trigger: { seconds: parseInt(alertFreq, 10), repeats: true },
+    });
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        leftButtonAction();
+      }
+    );
+  }
 
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) =>
       setExpoPushToken(token)
-    );
-
-    notificationListener.current = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        setNotification(notification);
-      }
     );
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
@@ -53,31 +90,8 @@ export default function App() {
     };
   }, []);
 
-  // constructor(props) {
-  //   super(props);
-  //   this.state = { leftText: "blank!" };
-  // }
-
-  leftButtonAction = () => {
-    fetch(
-      "https://5ketfr2si7.execute-api.us-east-2.amazonaws.com/dev/transactions?tranId=2&tranType=PURCHASE&tranAmount=100"
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        // this.setState({ leftText: data["tranMessage"] });
-      })
-      .catch((error) => console.log(error));
-  };
-
-  // render() {
-  console.log("App executed!");
-
   return (
     <SafeAreaView style={styles.container}>
-      <View>
-        <Text style={styles.title}>{"Some text!"}</Text>
-      </View>
       <Separator />
       <View
         style={{
@@ -87,6 +101,37 @@ export default function App() {
         }}
       >
         <Text>Your expo push token: {expoPushToken}</Text>
+        <View style={{ flexDirection: "row" }}>
+          <Text style={{ height: 40, textAlignVertical: "center" }}>Freq:</Text>
+          <TextInput
+            style={{
+              height: 40,
+              width: 40,
+              borderColor: "gray",
+              borderWidth: 1,
+            }}
+            onChangeText={(text) => setAlertFreq(text)}
+            value={alertFreq}
+          />
+        </View>
+        <View
+          style={{
+            width: "100%",
+          }}
+        >
+          <Text>Params:</Text>
+          <TextInput
+            style={{
+              height: 40,
+              width: "100%",
+              borderColor: "gray",
+              borderWidth: 1,
+            }}
+            onChangeText={(text) => onChangeText(text)}
+            value={tranParams}
+          />
+        </View>
+
         <View style={{ alignItems: "center", justifyContent: "center" }}>
           <Text>
             Title: {notification && notification.request.content.title}{" "}
@@ -96,11 +141,19 @@ export default function App() {
             Data:{" "}
             {notification && JSON.stringify(notification.request.content.data)}
           </Text>
+          <Text>Message: {leftText}</Text>
         </View>
         <Button
           title="Press to schedule a notification"
           onPress={async () => {
             await schedulePushNotification();
+          }}
+        />
+        <Button
+          title="Press to cancell all notifications"
+          onPress={async () => {
+            await Notifications.cancelAllScheduledNotificationsAsync();
+            notificationListener.current.remove();
           }}
         />
       </View>
@@ -110,10 +163,7 @@ export default function App() {
           This layout strategy lets the title define the width of the button.
         </Text>
         <View style={styles.fixToText}>
-          <Button
-            title="Get"
-            onPress={() => Alert.alert("Get button pressed")}
-          />
+          <Button title="Get" onPress={leftButtonAction} />
           <Button
             title="Right button"
             onPress={() => Alert.alert("Right button pressed")}
@@ -123,17 +173,6 @@ export default function App() {
     </SafeAreaView>
   );
   // }
-}
-
-async function schedulePushNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "You've got mail! 📬",
-      body: "Here is the notification body",
-      data: { data: "goes here" },
-    },
-    trigger: { seconds: 2 },
-  });
 }
 
 async function registerForPushNotificationsAsync() {

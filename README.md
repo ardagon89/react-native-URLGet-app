@@ -22,13 +22,36 @@ expo init URLGet --template blank # Also: npx URLGet run-android
 <br/>
 cd URLGet
 <br/>
+expo install expo-notifications
+<br/>
+Open your app.json and add the following inside of the "expo" field:
+{
+"expo": {
+...
+"android": {
+...
+"useNextNotificationsApi": true,
+}
+}
+}
+<br/>
 npm start
 <br/>
 
-# To run your project, navigate to the directory and run one of the following npm commands.
+# Necessary documentation.
 
-- cd URLGet
-- npm start # you can open iOS, Android, or web from here, or run them directly with the commands below.
-- npm run android
-- npm run ios # requires an iOS device or macOS for access to an iOS simulator
-- npm run web
+https://docs.expo.io/versions/latest/sdk/notifications/
+
+# To view the app
+
+npm start
+<br/>
+Run a virtual device in Android Studio AVD
+<br/>
+Click on "Run in android device/simulator" at http://localhost:19002/
+
+# To build an apk
+
+Follow the steps in https://docs.expo.io/distribution/building-standalone-apps/
+<br/>
+expo build:android -t apk
